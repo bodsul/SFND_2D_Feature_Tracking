@@ -25,3 +25,11 @@ We use a ratio of 0.8 as threshold.
 7. The speed of each detector-descriptor combination is also measured
 
 All statistics are saved in writeup.csv. Based on the speed and the number of quality key point matches detected, the best detector-descriptor combination in descending order are ORB-ORB, SHI-TOMASI-ORB, SHI-TOMASI-BRIEF.
+
+To reproduce results run
+cd build
+cmake ..
+make
+./2D_feature_tracking > out.txt
+cd ../scripts
+python parse_run_output.py
