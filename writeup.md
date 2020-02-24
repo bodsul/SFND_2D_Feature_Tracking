@@ -26,8 +26,8 @@ We use a ratio of 0.8 as threshold.
 
 All statistics are saved in writeup.csv. Based on the speed and the number of quality key point matches detected, the best detector-descriptor combination in descending order are ORB-ORB, SHI-TOMASI-ORB, SHI-TOMASI-BRIEF.
 
-To reproduce results run
-cd build
+To reproduce results run from top level directory
+mkdir build and cd build
 cmake ..
 make
 ./2D_feature_tracking > out.txt
