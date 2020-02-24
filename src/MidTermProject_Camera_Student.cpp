@@ -18,8 +18,9 @@
 
 using namespace std;
 
+
 /* MAIN PROGRAM */
-int main(int argc, const char *argv[])
+void run(string detectorType, string descriptorType)
 {
 
     /* INIT VARIABLES AND DATA STRUCTURES */
@@ -77,48 +78,18 @@ int main(int argc, const char *argv[])
         }
 
         //// EOF STUDENT ASSIGNMENT
-        cout << "#1 : LOAD IMAGE INTO BUFFER done" << endl;
+        //cout << "#1 : LOAD IMAGE INTO BUFFER done" << endl;
 
         /* DETECT IMAGE KEYPOINTS */
 
         // extract 2D keypoints from current image
         vector<cv::KeyPoint> keypoints; // create empty feature list for current image
-        string detectorType =  "FAST"; //"SHITOMASI";
+        //string detectorType =  "FAST"; //"SHITOMASI";
 
-        //// STUDENT ASSIGNMENT
-        //// TASK MP.2 -> add the following keypoint detectors in file matching2D.cpp and enable string-based selection based on detectorType
-        //// -> HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
-
-        if (detectorType.compare("SHITOMASI") == 0)
-        {
-            detKeypointsShiTomasi(keypoints, imgGray, false);
-        }
-        else if (detectorType.compare("HARRIS") == 0)
-        {
-            detKeypointsHarris(keypoints, imgGray, false);
-        }
-        else if (detectorType.compare("ORB") == 0)
-        {
-            detKeypointsORB(keypoints, imgGray, false);
-        }
-        else if (detectorType.compare("AKAZE") == 0)
-        {
-            detKeypointsAKAZE(keypoints, imgGray, false);
-        }
-        else if (detectorType.compare("FAST") == 0)
-        {
-            detKeypointsAKAZE(keypoints, imgGray, false);
-        }
-        else if (detectorType.compare("SURF") == 0)
-        {
-            detKeypointsSurf(keypoints, imgGray, false);
-        }
-        else
-        {
-            cout << "Unimplemented method: " << detectorType << endl;
-            exit(1);
-        }
-        
+        // STUDENT ASSIGNMENT
+        // TASK MP.2 -> add the following keypoint detectors in file matching2D.cpp and enable string-based selection based on detectorType
+        // -> HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
+        detKeypoints(keypoints, imgGray, false, detectorType);     
         //// EOF STUDENT ASSIGNMENT
 
         //// STUDENT ASSIGNMENT
@@ -132,6 +103,7 @@ int main(int argc, const char *argv[])
             cv::Mat mask(img.rows,img.cols,CV_8UC1,cv::Scalar(0));
             rectangle(mask,vehicleRect,cv::Scalar(255), cv::FILLED,8,0);
             cv::KeyPointsFilter::runByPixelsMask(keypoints, mask);
+            cout << "Number of key points in ROI: " << keypoints.size() << endl;
             visualize_keypoints(keypoints, img, detectorType + " keypoints Detector Results");
         }
 
@@ -153,7 +125,7 @@ int main(int argc, const char *argv[])
 
         // push keypoints and descriptor for current frame to end of data buffer
         dataBuffer[newest_index].keypoints = keypoints;
-        cout << "#2 : DETECT KEYPOINTS done" << endl;
+        //cout << "#2 : DETECT KEYPOINTS done" << endl;
 
         /* EXTRACT KEYPOINT DESCRIPTORS */
 
@@ -162,14 +134,14 @@ int main(int argc, const char *argv[])
         //// -> BRIEF, ORB, FREAK, AKAZE, SIFT
 
         cv::Mat descriptors;
-        string descriptorType = "BRIEF"; // BRIEF, ORB, FREAK, AKAZE, SIFT
+        //string descriptorType = "BRIEF"; // BRIEF, ORB, FREAK, AKAZE, SIFT
         descKeypoints(dataBuffer[newest_index].keypoints, dataBuffer[newest_index].cameraImg, descriptors, descriptorType);
         //// EOF STUDENT ASSIGNMENT
 
         // push descriptors for current frame to end of data buffer
         dataBuffer[newest_index].descriptors = descriptors;
 
-        cout << "#3 : EXTRACT DESCRIPTORS done" << endl;
+        //cout << "#3 : EXTRACT DESCRIPTORS done" << endl;
 
         if (dataBuffer.size() > 1) // wait until at least two images have been processed
         {
@@ -177,8 +149,8 @@ int main(int argc, const char *argv[])
             /* MATCH KEYPOINT DESCRIPTORS */
 
             vector<cv::DMatch> matches;
-            string matcherType = "MAT_FLANN";        // MAT_BF, MAT_FLANN
-            string descriptorType = "DES_BINARY"; // DES_BINARY, DES_HOG
+            string matcherType = "MAT_BF";        // MAT_BF, MAT_FLANN
+            //string descriptorType = "DES_BINARY"; // DES_BINARY, DES_HOG
             string selectorType = "SEL_KNN";       // SEL_NN, SEL_KNN
 
             //// STUDENT ASSIGNMENT
@@ -194,7 +166,7 @@ int main(int argc, const char *argv[])
             // store matches in current data frame
             dataBuffer[newest_index].kptMatches = matches;
 
-            cout << "#4 : MATCH KEYPOINT DESCRIPTORS done" << endl;
+            //cout << "#4 : MATCH KEYPOINT DESCRIPTORS done" << endl;
 
             // visualize matches between current and previous image
             bVis = true;
@@ -207,16 +179,29 @@ int main(int argc, const char *argv[])
                                 cv::Scalar::all(-1), cv::Scalar::all(-1),
                                 vector<char>(), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
-                string windowName = "Matching keypoints between two camera images";
+                string windowName = string("Matched kpts for detector ") + detectorType + string(" descriptor: ") + descriptorType;
                 cv::namedWindow(windowName, 7);
                 cv::imshow(windowName, matchImg);
-                cout << "Press key to continue to next image" << endl;
-                cv::waitKey(0); // wait for key to be pressed
+                cv::waitKey(25); // wait for key to be pressed
             }
             bVis = false;
         }
 
     } // eof loop over all images
+}
 
+int main(int argc, const char *argv[])
+{
+    vector<string> detectorTypes {"SHITOMASI", "HARRIS", "FAST", "BRISK", "ORB", "AKAZE", "SIFT"};
+    vector<string> descriptorTypes {"BRIEF", "ORB", "FREAK", "AKAZE", "SIFT"};
+    for(string detectorType: detectorTypes){
+        for(string descriptorType: descriptorTypes) {
+            //renove incompatible combinations
+            if (descriptorType == "BRIEF" && detectorType == "SIFT") continue;
+            if (descriptorType == "AKAZE" && detectorType != "AKAZE") continue;
+            cout << "detector: " << detectorType << " " << "descriptor: " << descriptorType << endl;
+            run(detectorType, descriptorType);
+        }
+    }
     return 0;
 }
